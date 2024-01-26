@@ -1,6 +1,6 @@
 .PHONY: all clean
 
-all: sort1 sort2 sort3 optimized experiment
+all: sort1 sort2 sort3 experiment
 
 sort1: bubble_sort.py
 	echo '#!/usr/bin/env python3' > sort1
@@ -19,4 +19,4 @@ experiment: experiment.py
 	type experiment.py >> experiment
 
 clean:
-	rm -f sort1 sort2 sort3 optimized experiment
+	del sort1 sort2 sort3 experiment
