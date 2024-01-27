@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-
 import csv
 import sys
 
-def bubble_sort(a):
+def optimized_bubble_sort(a):
 	update=True
 	n=len(a)
 	while(update==True and n>1):
@@ -27,7 +26,7 @@ if __name__ == "__main__":
         csvreader = csv.reader(csvfile)
         input_list = [row for row in csvreader]
 
-    bubble_sort(input_list)
+    optimized_bubble_sort(input_list)
 
     for row in input_list:
         print(','.join(row))

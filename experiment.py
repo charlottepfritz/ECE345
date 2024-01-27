@@ -1,13 +1,20 @@
-#!/usr/bin/env python3
-
 import matplotlib.pyplot as plt
 import time
 import subprocess
 import random
 import os
 import math
+import numpy as np
 
 
+def calculate_y_for_merge_sort(x):
+    # return 0.00002 * x * np.log(0.00006 * x + 0.8) + 0.03
+    return 0.00001 * x * np.log(0.00002 * x + 0.7) + 0.07
+
+
+def calculate_y_for_quick_sort(x):
+    # return 0.000025 * x * np.log(0.00005 * x + 0.8) + 0.028
+    return 0.00001 * x * np.log(0.000015 * x + 0.7) + 0.2
 
 
 def generate_random_input_file(size):
@@ -18,75 +25,241 @@ def generate_random_input_file(size):
             row = [str(sort_key)] + list(map(str, values))
             file.write(','.join(row) + '\n')
 
-
+def mostly_sorted_write(size):
+    with open("inputfile.csv", "w") as file:
+        sort_key = random.randint(1, 1000)
+        for _ in range(size):
+            # Introduce a slight variation to the sort_key to make it mostly sorted
+            sort_key += random.randint(-5, 5)
+            values = [random.randint(1, 100) for _ in range(10)]  # Adjust the range and number of values as needed
+            row = [str(sort_key)] + list(map(str, values))
+            file.write(','.join(row) + '\n')
 
 def measure_runtime(script, input_size):
     generate_random_input_file(input_size)
 
     start_time = time.time()
-    subprocess.run(["python", script, "inputfile.csv"])  # Adjust "python" if needed
+    subprocess.run([script, "inputfile.csv"])  # Adjust "python" if needed
     end_time = time.time()
 
     return end_time - start_time
 
+def measure_runtime_ideal(script, input_size):
+    mostly_sorted_write(input_size)
 
+    start_time = time.time()
+    subprocess.run([script, "inputfile.csv"])  # Adjust "python" if needed
+    end_time = time.time()
+
+    return end_time - start_time
 
 if __name__ == "__main__":
-    input_sizes = [10, 50, 100, 200, 500, 1000, 5000, 7500, 10000]  # Adjust the input sizes as needed
-
+    # Generate data points for the graph
+    n_values = np.arange(0, 10001, 100) # 1000 bubble
+    random_seed = 42  # You can choose any integer value as the seed
+    random.seed(random_seed)
+    
     bubble_sort_runtimes = []
     optimized_bubble_sort_runtimes = []
+    optimized_bubble_sort_runtimes_ideal = []
+    bubble_sort_runtimes_ideal = []
     merge_sort_runtimes=[]
     quick_sort_runtimes=[]
+    quadratic_runtimes = []
+    nlogn_runtimes = []
 
+    for value in n_values:
+        runtime_bubble_sort = measure_runtime("./bubble_sort.py", value)
+        # runtime_quick_sort = measure_runtime("./quick_sort.py", value)
+        # runtime_merge_sort = measure_runtime("./merge_sort.py", value)
+        runtime_optimized = measure_runtime("./optimized.py", value)
 
-    for input_size in input_sizes:
-
-        #script_path = os.path.abspath(__file__)
-        #quick_sort_path = os.path.join(os.path.dirname(script_path), "quick_sort.py")
-  
-        runtime_bubble_sort = measure_runtime("./bubble_sort.py", input_size)
-        runtime_quick_sort = measure_runtime("./quick_sort.py", input_size)
-        runtime_merge_sort = measure_runtime("./merge_sort.py", input_size)
+        runtime_optimized_ideal = measure_runtime_ideal("./optimized.py", value)
+        bubble_sort_runtime_ideal = measure_runtime_ideal("./bubble_sort.py", value)
 
         bubble_sort_runtimes.append(runtime_bubble_sort)
-        quick_sort_runtimes.append(runtime_quick_sort)
-        merge_sort_runtimes.append(runtime_merge_sort)
+        # quick_sort_runtimes.append(runtime_quick_sort)
+        # merge_sort_runtimes.append(runtime_merge_sort)
+        optimized_bubble_sort_runtimes.append(runtime_optimized)
+        
+        optimized_bubble_sort_runtimes_ideal.append(runtime_optimized_ideal)
+        bubble_sort_runtimes_ideal.append(bubble_sort_runtime_ideal)
 
-        print(f"Input Size: {input_size}")
-        print(f"Bubble Sort Runtime: {runtime_bubble_sort:.6f} seconds")
-        print(f"Quick Sort Runtime: {runtime_quick_sort:.6f} seconds")
-        print(f"Merge Sort Runtime: {runtime_merge_sort:.6f} seconds")
+        print(f"Number of values: {value}")
+        #print(f"Bubble Sort Runtime: {runtime_bubble_sort:.6f} seconds")
+        #print(f"Optimized Runtime: {runtime_optimized:.6f} seconds")
+        # print(f"Quick Sort Runtime: {runtime_quick_sort:.6f} seconds")
+        # print(f"Merge Sort Runtime: {runtime_merge_sort:.6f} seconds")
         print()
+    
 
-    # Plotting
-    fig, axs = plt.subplots(2,2, sharex=True, sharey='row')
-    axs[0,0].plot(input_sizes, bubble_sort_runtimes, 'tab:blue', label='Bubble Sort')
-    axs[1,0].plot(input_sizes, quick_sort_runtimes, 'tab:orange', label='Quick Sort')
-    axs[1,1].plot(input_sizes, merge_sort_runtimes, 'tab:green', label='Merge Sort')
-    fig.suptitle('Experimental runtime complexities')
+    # Plotting the graph
+    #plt.plot(n_values, constant_values, 'tab:red', label='O(1) Constant Time')
+    #plt.plot(n_values, log_n_values, 'tab:orange',label='O(log n) Logarithmic Time')
+    #plt.plot(n_values, linear_values, 'tab:grey',label='O(n) Linear Time')
+    #plt.plot(n_values, n_log_n_values, 'tab:green',label='O(n log n) Linearithmic Time')
+    #plt.plot(n_values, quadratic_runtimes, 'tab:purple',label='O(n^2) Quadratic Time')
 
-    for ax in axs.flat:   
-        ax.set_xlabel('Input Size')
-        ax.set_ylabel('Runtime (seconds)')
-        ax.legend()
+    # plotting bubble sort
+    # plt.figure(1)
+    # plt.plot(n_values, bubble_sort_runtimes,'tab:blue', label='Bubble Sort')
+    # plt.plot(n_values, (n_values/3700)*(n_values/3700), 'tab:red', label='y=(n/3700)^2')
+    # plt.xlabel('Input Size (n)')
+    # plt.ylabel('Runtime [s]')
+    # plt.title('Bubble Sort Time Complexity')
+    # plt.legend()
+    # plt.grid(True)
 
-    nlog = lambda n : n*math.log(n)
+    # plotting optimized bubble sort
+    # plt.figure(2)
+    # plt.plot(n_values, bubble_sort_runtimes, 'tab:purple', label='Optimized Bubble Sort')
+    # plt.plot(n_values, (n_values/3650)*(n_values/3650), 'tab:red', label='y=(n/3650)^2')
+    # plt.xlabel('Input Size (n)')
+    # plt.ylabel('Runtime [s]')
+    # plt.title('Optimized Bubble Sort Time Complexity')
+    # plt.legend()
+    # plt.grid(True)
 
-    fig2, axs2= plt.subplots(2,2,sharex=True, sharey=False)
-    axs2[0,0].plot(input_sizes, bubble_sort_runtimes, 'tab:blue', label='Bubble Sort')
-    axs2[0,0].plot(input_sizes, [1e-4*nlog(inp) for inp in input_sizes] , 'tab:red', label='c=1e-4')
-    axs2[1,0].plot(input_sizes, quick_sort_runtimes, 'tab:orange', label='Quick Sort')
-    axs2[1,0].plot(input_sizes, [1e-5*nlog(inp) for inp in input_sizes]  , 'tab:red', label='c=1e-5')
-    axs2[1,1].plot(input_sizes, merge_sort_runtimes, 'tab:green', label='Merge Sort')
-    axs2[1,1].plot(input_sizes, [1e-4*(inp^2) for inp in input_sizes]  , 'tab:red', label='c=1e-4')
-    fig2.suptitle('Determining constants')
-    fig2.tight_layout()
+    # plotting merge sort
+    # plt.figure(1)
+    # plt.plot(n_values, merge_sort_runtimes, 'tab:green', label='Merge Sort')
+    # y_values = [calculate_y_for_merge_sort(n) for n in n_values]
+    # plt.plot(n_values, y_values, 'tab:red', label='1e-5x * log(2e-5 * x + 0.7) + 0.07')
+    # plt.xlabel('Input Size (n)')
+    # plt.ylabel('Runtime [s]')
+    # plt.title('Merge Sort Time Complexity')
+    # plt.legend()
+    # plt.grid(True)
 
-    for ax in axs2.flat:   
-        ax.set_xlabel('Input Size')
-        ax.set_ylabel('Runtime (seconds)')
-        ax.legend()
+    # plotting quick sort
+    # plt.figure(2)
+    # plt.plot(n_values, merge_sort_runtimes, 'tab:orange', label='Quick Sort')
+    # y_values = [calculate_y_for_quick_sort(n) for n in n_values]
+    # plt.plot(n_values, y_values, 'tab:red', label='1e-5x * log(15e-5 * x + 0.7) + 0.2')
+    # plt.xlabel('Input Size (n)')
+    # plt.ylabel('Runtime [s]')
+    # plt.title('Quick Sort Time Complexity')
+    # plt.legend()
+    # plt.grid(True)
+
+    # plotting merge and quick sort
+    # plt.figure(2)
+    # plt.plot(n_values, quick_sort_runtimes, 'tab:orange', label='Quick Sort')
+    # y_values = [calculate_y_for_quick_sort(n) for n in n_values]
+    # plt.plot(n_values, y_values, 'tab:grey', label='1e-5x * log(15e-5 * x + 0.7) + 0.2')
+    # plt.plot(n_values, merge_sort_runtimes, 'tab:green', label='Merge Sort')
+    # y_values = [calculate_y_for_merge_sort(n) for n in n_values]
+    # plt.plot(n_values, y_values, 'tab:grey', label='1e-5x * log(2e-5 * x + 0.7) + 0.07')
+    # plt.xlabel('Input Size (n)')
+    # plt.ylabel('Runtime [s]')
+    # plt.title('Time Complexity Comparison of Merge and Quick Sort')
+    # plt.legend()
+    # plt.grid(True)
+
+    # plotting all graphs overlayed
+    # plt.figure(3)
+    # plt.plot(n_values, bubble_sort_runtimes, 'tab:blue', label='Bubble Sort')
+    # plt.plot(n_values, quick_sort_runtimes, 'tab:orange', label='Quick Sort')
+    # plt.plot(n_values, merge_sort_runtimes, 'tab:green', label='Merge Sort')
+    # plt.xlabel('Input Size (n)')
+    # plt.ylabel('Runtime [s]')
+    # plt.title('Experimental Time Complexity of Algorithims')
+    # plt.legend()
+    # plt.grid(True)
+
+
+    # plotting bubble sort and optimized bubble sort
+    # plt.figure(4)
+    # plt.plot(n_values, bubble_sort_runtimes, 'tab:blue', label='Bubble Sort')
+    # plt.plot(n_values, optimized_bubble_sort_runtimes, 'tab:purple', label='Optimized Bubble Sort')
+    # plt.xlabel('Input Size (n)')
+    # plt.ylabel('Runtime [s]')
+    # plt.title('Comparison of Time Complexity with Optimization Implemented')
+    # plt.legend()
+    # plt.grid(True)
+
+    # plotting bubble sort and optimized bubble sort (ideal case)
+    plt.figure(1)
+    plt.plot(n_values, bubble_sort_runtimes_ideal, 'tab:blue', label='Bubble Sort')
+    plt.plot(n_values, optimized_bubble_sort_runtimes_ideal, 'tab:purple', label='Optimized Bubble Sort')
+    plt.xlabel('Input Size (n)')
+    plt.ylabel('Runtime [s]')
+    plt.title('Experimental Time Complexity with Optimization Implemented (Ideal Case)')
+    plt.legend()
+    plt.grid(True)
+
+    # plotting bubble sort and optimized bubble sort (ideal and non-ideal cases)
+    plt.figure(2)
+    plt.plot(n_values, bubble_sort_runtimes, 'tab:blue', label='Bubble Sort')
+    plt.plot(n_values, optimized_bubble_sort_runtimes, 'tab:cyan', label='Optimized Bubble Sort')
+    plt.plot(n_values, bubble_sort_runtimes_ideal, 'tab:green', label='Bubble Sort (ideal case)')
+    plt.plot(n_values, optimized_bubble_sort_runtimes_ideal, 'tab:olive', label='Optimized Bubble Sort (ideal case')
+    plt.xlabel('Input Size (n)')
+    plt.ylabel('Runtime [s]')
+    plt.title(' Time Complexity Optimization Comparison of Cases')
+    plt.legend()
+    plt.grid(True)
 
     plt.show()
+
+    # plt.plot(n_values, quick_sort_runtimes, 'tab:green', label='Quick Sort')
+    # #plt.plot(n_values, merge_sort_runtimes, 'tab:pink', label='Merge Sort')
+
+    # #plt.plot(n_values, optimized_bubble_sort_runtimes, 'tab:purple', label='Optimized Bubble Sort')
+    # plt.xlabel('Input Size (n)')
+    # plt.ylabel('Runtime')
+    # plt.title('Various Time Complexities')
+    # plt.legend()
+    # plt.grid(True)
+
+    # # Calculate y values for each x
+    # y_values = [calculate_y_for_quick_sort(n) for n in n_values]
+    # plt.plot(n_values, y_values, 'tab:purple', label='nlogn')
+
+    # plt.figure(2)
+    # # plt.figure(2)
+    # plt.plot(n_values, merge_sort_runtimes, 'tab:pink', label='Merge Sort')
+    # #plt.plot(n_values, merge_sort_runtimes, 'tab:pink', label='Merge Sort')
+
+    # #plt.plot(n_values, optimized_bubble_sort_runtimes, 'tab:purple', label='Optimized Bubble Sort')
+    # #plt.plot(n_values, (n_values/3650)*(n_values/3650), 'tab:pink', label='y=(n/3650)^2')
+    # plt.xlabel('Input Size (n)')
+    # plt.ylabel('Runtime')
+    # plt.title('Various Time Complexities')
+    # plt.legend()
+    # plt.grid(True)
+
+    # # Calculate y values for each x
+    # y_values = [calculate_y_for_merge_sort(n) for n in n_values]
+    # plt.plot(n_values, y_values, 'tab:purple', label='nlogn')
+
+
+    #plt.plot(n_values, quick_sort_runtimes, 'tab:purple', label='Quick Sort')
+    # plt.plot(n_values, optimized_bubble_sort_runtimes_ideal, 'tab:blue', label='Optimized Bubble Sort (Ideal)')
+    # plt.plot(n_values, bubble_sort_runtimes_ideal, 'tab:red', label='Bubble Sort (Ideal)')
+
+    # plt.plot(n_values, (n_values/3650)*(n_values/3650), 'tab:green', label='y=(n/3650)^2')
+    # plt.plot(n_values, (n_values/3650)*(n_values/3650), 'tab:orange', label='y=(n/3650)^2')
+
+    # plt.xlabel('Input Size (n)')
+    # plt.ylabel('Runtime')
+    # plt.title('Various Time Complexities')
+    # plt.legend()
+    # plt.grid(True)
+    # plt.show()
+
+
+    
+
+    #points = [(0, 0), (500, 0.75), (1000, 2),(2000, 4),(3000, 9), (4000, 16)]
+
+    # Extract x and y coordinates
+    #x_coordinates, y_coordinates = zip(*points)
+
+    # Plotting the graph
+    #plt.plot(x_coordinates, y_coordinates, marker='o', linestyle='-', color='b')
+
+
+
+
 

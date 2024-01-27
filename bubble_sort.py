@@ -2,6 +2,7 @@
 
 import csv
 import sys
+import random
 
 def bubble_sort(a):
 	update=True
@@ -15,6 +16,8 @@ def bubble_sort(a):
 
 
 if __name__ == "__main__":
+    random_seed = 42  # You can choose any integer value as the seed
+    random.seed(random_seed)
     if len(sys.argv) != 2:
         print("Usage: {} inputfile".format(sys.argv[0]))
         sys.exit(1)
